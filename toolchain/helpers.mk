@@ -169,7 +169,7 @@ copy_toolchain_sysroot = \
 #
 check_kernel_headers_version = \
 	if ! support/scripts/check-kernel-headers.sh $(1) $(2) $(3) \
-		$(if $(BR2_TOOLCHAIN_HEADERS_LATEST),$(4),strict); \
+		$(if $(BR2_TOOLCHAIN_HEADERS_LATEST),$(4),strict) $(5); \
 	then \
 		exit 1; \
 	fi

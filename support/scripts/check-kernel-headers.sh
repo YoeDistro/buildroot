@@ -21,6 +21,9 @@ SYSROOT="${2}"
 HDR_VER="${3}.0.0"
 CHECK="${4}"  # 'strict' or 'loose'
 
+# cross compiler passed in case of external toolchains
+CROSS_CC="${5}"
+
 HDR_M="${HDR_VER%%.*}"
 HDR_V="${HDR_VER#*.}"
 HDR_m="${HDR_V%%.*}"
@@ -36,11 +39,21 @@ trap 'rm -f "${EXEC}"' EXIT
 
 EXEC="$(mktemp -p "${BUILDDIR}" -t .check-headers.XXXXXX)"
 
+if [ -n "${CROSS_CC}" ]; then
+  MAKE_VER_H=$(${CROSS_CC} -M -xc - <<_EOF_
+#include <linux/version.h>
+_EOF_
+  )
+  VER_H=`echo $MAKE_VER_H | awk 'END {print $NF}'`
+else
+  VER_H="${SYSROOT}/usr/include/linux/version.h"
+fi
+
 # We do not want to account for the patch-level, since headers are
 # not supposed to change for different patchlevels, so we mask it out.
 # This only applies to kernels >= 3.0, but those are the only one
 # we actually care about; we treat all 2.6.x kernels equally.
-${HOSTCC} -imacros "${SYSROOT}/usr/include/linux/version.h" \
+${HOSTCC} -imacros "${VER_H}" \
           -x c -o "${EXEC}" - <<_EOF_
 #include <stdio.h>
 #include <stdlib.h>
